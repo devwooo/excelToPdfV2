@@ -1,7 +1,10 @@
 package hpy.utils;
 
+import com.itextpdf.text.pdf.BaseFont;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -47,8 +50,16 @@ public class FileUtils {
             if (numberOfSheets == 1) {
                 XSSFSheet sheet = workbook.getSheetAt(0);
                 XSSFRow row = sheet.getRow(Integer.parseInt(rowStr));
-                if (row != null) {
+                if (row == null) {
                     throw new IllegalArgumentException("헤더 ROW가 비어있습니다.");
+                }
+
+                short lastCellNum = row.getLastCellNum();
+                for (int i = 0; i < lastCellNum; i++) {
+                    XSSFCell cell = row.getCell(i, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+                    if (cell != null) {
+                        headers.add(cell.getStringCellValue());
+                    }
                 }
             }
 
@@ -61,6 +72,13 @@ public class FileUtils {
         return headers;
     }
 
+    public static BaseFont getKoreanBaseFont() throws Exception {
+        return BaseFont.createFont(
+                "HYGoThic-Medium",     // 또는 HYSMyeongJo-Medium
+                "UniKS-UCS2-H",        // 한국어용 인코딩
+                BaseFont.NOT_EMBEDDED
+        );
+    }
 
 
 }
