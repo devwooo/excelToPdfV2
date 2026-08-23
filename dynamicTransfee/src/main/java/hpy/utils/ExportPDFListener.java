@@ -5,6 +5,7 @@ import com.itextpdf.text.Font;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import hpy.MainFrame;
 import hpy.enums.Headers;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ExportPDFListener implements ActionListener {
 
@@ -38,14 +40,16 @@ public class ExportPDFListener implements ActionListener {
     private JTextField excludeInput;
     private int dateColIdx = -1;
     private final Map<Integer, String> writeMap = new HashMap<>();
+    private final Consumer<Object> onComplete;
 
-    public ExportPDFListener(int format, String filePath, String exportPath, JCheckBox excludeCheckBox, List<JCheckBox> listCheckBox, JTextField excludeInput) {
+    public ExportPDFListener(int format, String filePath, String exportPath, JCheckBox excludeCheckBox, List<JCheckBox> listCheckBox, JTextField excludeInput, Consumer<Object> onComplete) {
         this.format = format;
         this.filePath = filePath;
         this.exportPath = exportPath;
         this.excludeCheckBox = excludeCheckBox;
         this.listCheckBox = listCheckBox;
         this.excludeInput = excludeInput;
+        this.onComplete = onComplete;
     }
 
 
@@ -203,11 +207,13 @@ public class ExportPDFListener implements ActionListener {
                 try {
                     Boolean ok = (Boolean) get();
                     if (Boolean.FALSE.equals(ok)) {
-                        JOptionPane.showMessageDialog(owner, "출력할 헤더를 하나 이상 선택해 주세요",
-                                "경고", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(owner, "출력할 헤더를 하나 이상 선택해 주세요", "경고", JOptionPane.WARNING_MESSAGE);
                     } else {
-                        JOptionPane.showMessageDialog(owner, "PDF 생성이 완료되었습니다.",
-                                "완료", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(owner, "PDF 생성이 완료되었습니다.", "완료", JOptionPane.INFORMATION_MESSAGE);
+                        // 생성 성공 시 첫 번째 패널(step1)로 돌아간다.
+                        if (onComplete != null) {
+                            onComplete.accept("complete");
+                        }
                     }
                 } catch (Exception ex) {
                     Throwable cause = (ex.getCause() != null) ? ex.getCause() : ex;

@@ -13,8 +13,8 @@ import java.util.function.Consumer;
 public class ReadPanel extends JPanel {
 
     private final JRadioButton tmoneyRadio = new JRadioButton("Tmoney", true);
-    private final JRadioButton tossRadio = new JRadioButton("Toss");
-    private final JRadioButton kakaoRadio = new JRadioButton("Kakao");
+//    private final JRadioButton tossRadio = new JRadioButton("Toss");
+//    private final JRadioButton kakaoRadio = new JRadioButton("Kakao");
     private final ButtonGroup formatGroup = new ButtonGroup();
     private final JTextField filePathField = new JTextField();
     private final JTextField exportPathField = new JTextField();
@@ -50,7 +50,7 @@ public class ReadPanel extends JPanel {
         // 1. 파일 양식 선택
         ComponentUtils.addLabel(this, gbc, 0, "파일 양식을 선택해 주세요");
         JPanel formatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        for (JRadioButton radio : new JRadioButton[]{tmoneyRadio, tossRadio, kakaoRadio}) {
+        for (JRadioButton radio : new JRadioButton[]{tmoneyRadio}) {
             formatGroup.add(radio);
             formatPanel.add(radio);
         }
@@ -74,8 +74,8 @@ public class ReadPanel extends JPanel {
 
 
     private String getSelectedFormat() {
-        if (tossRadio.isSelected()) return "Toss";
-        if (kakaoRadio.isSelected()) return "Kakao";
+//        if (tossRadio.isSelected()) return "Toss";
+//        if (kakaoRadio.isSelected()) return "Kakao";
         return "Tmoney";
     }
 
@@ -103,4 +103,10 @@ public class ReadPanel extends JPanel {
             exportPathField.setText(selected.getAbsolutePath());
         }
     }
+
+    public void reset() {
+        filePathField.setText("");
+        exportPathField.setText("");
+    }
+
 }

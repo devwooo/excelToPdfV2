@@ -9,6 +9,8 @@ import hpy.utils.NumericFilter;
 import javax.swing.*;
 import javax.swing.text.AbstractDocument;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,14 +49,22 @@ public class EditSavePanel extends JPanel {
         ComponentUtils.addLabel(this, gbc, upCount(), "3. 제외할 날짜를 입력해 주세요 (1,15,20...)");
         ((AbstractDocument) excludeInput.getDocument()).setDocumentFilter(new NumericFilter());
         ComponentUtils.addField(this, gbc, upCount(), excludeInput, null);
-
-
+        excludeInput.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                String text = excludeInput.getText();
+                if (!text.isEmpty()) {
+                    // 예: 끝에 붙은 콤마 제거
+                    excludeInput.setText(text.replaceAll(",+$", ""));
+                }
+            }
+        });
 
     }
 
     private void checkboxHeaderInit() {
         try {
-            // 라벨
+            // 라벨1
             ComponentUtils.addLabel(this, gbc, upCount(), "1. 추가할 헤더를 선택해 주세요");
 
             // 체크박스
@@ -92,7 +102,7 @@ public class EditSavePanel extends JPanel {
         btnPanel.add(makePDF);
         ComponentUtils.addField(this, gbc, upCount(), btnPanel, null);
         prevBtn.addActionListener(e -> onBack.accept(null));
-        makePDF.addActionListener(new ExportPDFListener(ExcelFormat.from(format).getHeaderRow(), filePath, exportPath, checkBox, listCheckBox, excludeInput));
+        makePDF.addActionListener(new ExportPDFListener(ExcelFormat.from(format).getHeaderRow(), filePath, exportPath, checkBox, listCheckBox, excludeInput, onBack));
     }
 
     private int getCount() {

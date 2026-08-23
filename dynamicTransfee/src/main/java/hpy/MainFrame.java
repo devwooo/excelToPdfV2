@@ -13,6 +13,7 @@ public class MainFrame extends JFrame {
 
     private final JPanel container = new JPanel(new CardLayout());
     private EditSavePanel editSavePanel; // 다음 클릭 시점에 생성
+    private ReadPanel readPanel;
 
     public MainFrame() {
         setTitle("동적 Excel To PDF");
@@ -20,12 +21,17 @@ public class MainFrame extends JFrame {
 
         CardLayout cardLayout = (CardLayout) container.getLayout();
 
-        ReadPanel readPanel = new ReadPanel(data -> {
+        readPanel = new ReadPanel(data -> {
             // 파일 재선택 후 다시 들어오는 경우 이전 패널 제거
             if (editSavePanel != null) {
                 container.remove(editSavePanel);
             }
-            editSavePanel = new EditSavePanel(data, back -> cardLayout.show(container, "step1"));
+            editSavePanel = new EditSavePanel(data, back -> {
+                cardLayout.show(container, "step1");
+                if (back.equals("complete")) readPanel.reset();
+
+
+            });
             container.add(editSavePanel, "step2");
             cardLayout.show(container, "step2");
             pack(); // step2 크기에 맞춰 프레임 다시 조정

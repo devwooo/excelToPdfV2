@@ -28,3 +28,17 @@ tasks.test {
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "hpy.Main"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from({
+        configurations.runtimeClasspath.get()
+            .filter { it.name.endsWith("jar") }
+            .map { zipTree(it) }
+    }) {
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    }
+}
