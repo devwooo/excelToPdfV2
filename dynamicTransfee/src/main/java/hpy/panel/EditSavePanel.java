@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -26,7 +27,7 @@ public class EditSavePanel extends JPanel {
     JTextField excludeInput = new JTextField();
     private int count = 0;
 
-    public EditSavePanel(Map<String, String> data, Consumer<Object> onBack) {
+    public EditSavePanel(Map<String, String> data, Consumer<Map<String, String>> onBack) {
         this.format = data.get("format");
         this.filePath = data.get("filePath");
         this.exportPath = data.get("exportPath");
@@ -74,6 +75,10 @@ public class EditSavePanel extends JPanel {
             for (String header : headers) {
                 JCheckBox cb = new JCheckBox(header);
                 cb.setSelected(true);
+                // 거래 일시는 필수값이므로 체크 해제 불가
+                if (header.equals("거래일시")) {
+                    cb.setEnabled(false);
+                }
                 checkboxPanel.add(cb);
                 listCheckBox.add(cb);
             }
@@ -93,7 +98,7 @@ public class EditSavePanel extends JPanel {
         }
     }
 
-    private void addBtn(Consumer<Object> onBack) {
+    private void addBtn(Consumer<Map<String, String>> onBack) {
         JPanel btnPanel = new JPanel(new GridLayout(0, 2, 10, 10));
         JButton prevBtn = new JButton("이전");
         JButton makePDF = new JButton("PDF 변환");
@@ -101,7 +106,7 @@ public class EditSavePanel extends JPanel {
         btnPanel.add(prevBtn);
         btnPanel.add(makePDF);
         ComponentUtils.addField(this, gbc, upCount(), btnPanel, null);
-        prevBtn.addActionListener(e -> onBack.accept(null));
+        prevBtn.addActionListener(e -> onBack.accept(new HashMap<>()));
         makePDF.addActionListener(new ExportPDFListener(ExcelFormat.from(format).getHeaderRow(), filePath, exportPath, checkBox, listCheckBox, excludeInput, onBack));
     }
 

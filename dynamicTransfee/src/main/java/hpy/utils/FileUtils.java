@@ -1,5 +1,7 @@
 package hpy.utils;
 
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Font;
 import com.itextpdf.text.pdf.BaseFont;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -9,6 +11,7 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,6 +34,29 @@ public class FileUtils {
         }
     }
 
+    public static void openFolder(String path) {
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException("해당 경로가 존재하지 않습니다");
+        }
+
+        File file = new File(path);
+        // Desktop 지원 여부 확인
+        if (Desktop.isDesktopSupported()) {
+            Desktop desktop = Desktop.getDesktop();
+
+            try {
+                if (file.exists() && file.isDirectory()) {
+                    desktop.open(file);
+                } else {
+                    throw new IllegalArgumentException("해당 폴더가 존재하지 않습니다");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+
+    }
 
     public static List<String> getHeaders(String rowStr, String filePath) {
         if (filePath.isEmpty()) {
@@ -79,6 +105,16 @@ public class FileUtils {
                 BaseFont.NOT_EMBEDDED
         );
     }
+
+    public static Font getDefaultFont() throws Exception {
+        return getDefaultFont(8);
+    }
+
+    public static Font getDefaultFont(int size) throws Exception {
+        return new Font(getKoreanBaseFont(), size, Font.NORMAL, BaseColor.BLACK);
+    }
+
+
 
 
 }

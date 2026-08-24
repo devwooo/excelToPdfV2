@@ -2,6 +2,7 @@ package hpy;
 
 import hpy.panel.EditSavePanel;
 import hpy.panel.ReadPanel;
+import hpy.utils.FileUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,9 +29,12 @@ public class MainFrame extends JFrame {
             }
             editSavePanel = new EditSavePanel(data, back -> {
                 cardLayout.show(container, "step1");
-                if (back.equals("complete")) readPanel.reset();
-
-
+                if (!back.isEmpty() && back.get("isPass").equals("complete")) {
+                    readPanel.reset();
+                    FileUtils.openFolder(back.get("openDirPath"));
+                }
+                // 크기 재조정
+                pack();
             });
             container.add(editSavePanel, "step2");
             cardLayout.show(container, "step2");

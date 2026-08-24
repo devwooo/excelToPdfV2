@@ -5,8 +5,6 @@ import com.itextpdf.text.Font;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
-import hpy.MainFrame;
-import hpy.enums.Headers;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -21,28 +19,28 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class ExportPDFListener implements ActionListener {
-
+    private int priceSum = 0;
     private final int format;
     private final String filePath;
     private final String exportPath;
     private final JCheckBox excludeCheckBox;
     private final List<JCheckBox> listCheckBox;
-    private JTextField excludeInput;
+    private final JTextField excludeInput;
     private int dateColIdx = -1;
     private final Map<Integer, String> writeMap = new HashMap<>();
-    private final Consumer<Object> onComplete;
+    private final Consumer<Map<String, String>> onComplete;
 
-    public ExportPDFListener(int format, String filePath, String exportPath, JCheckBox excludeCheckBox, List<JCheckBox> listCheckBox, JTextField excludeInput, Consumer<Object> onComplete) {
+    public ExportPDFListener(int format, String filePath, String exportPath, JCheckBox excludeCheckBox, List<JCheckBox> listCheckBox, JTextField excludeInput, Consumer<Map<String, String>> onComplete) {
         this.format = format;
         this.filePath = filePath;
         this.exportPath = exportPath;
@@ -95,9 +93,9 @@ public class ExportPDFListener implements ActionListener {
                         PdfWriter.getInstance(document, fos);
                         document.open();
 
-                        table = new PdfPTable(listCheckBox.size());
+                        long count = listCheckBox.stream().filter(AbstractButton::isSelected).count();
+                        table = new PdfPTable((int)count);
                         table.setWidthPercentage(100);
-
 
                         int lastRowNum = sheet.getLastRowNum();
                         for (int i = format; i <= lastRowNum; i++) {
@@ -177,14 +175,19 @@ public class ExportPDFListener implements ActionListener {
                                     continue;
                                 }
 
-                                Font font = new Font(FileUtils.getKoreanBaseFont(), 8, Font.NORMAL, BaseColor.BLACK);
+
+                                String value = writeMap.get(cellIdx);
                                 // TODO PDF 화면 꾸미기
-                                extracted(cellValue, font, table);
+                                extracted(value.trim(), cellValue, FileUtils.getDefaultFont(), table);
                             }
                         }
 
+                        NumberFormat instance = NumberFormat.getInstance(Locale.US);
+                        String totalSum = instance.format(priceSum);
+                        document.add(new Paragraph("총 금액 : " + totalSum + "원", FileUtils.getDefaultFont(10)));
+                        // 문자열과 간격 조정
+                        table.setSpacingBefore(10f);
                         document.add(table);
-
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     } finally {
@@ -212,7 +215,10 @@ public class ExportPDFListener implements ActionListener {
                         JOptionPane.showMessageDialog(owner, "PDF 생성이 완료되었습니다.", "완료", JOptionPane.INFORMATION_MESSAGE);
                         // 생성 성공 시 첫 번째 패널(step1)로 돌아간다.
                         if (onComplete != null) {
-                            onComplete.accept("complete");
+                            Map<String, String> map = new HashMap<>();
+                            map.put("isPass", "complete");
+                            map.put("openDirPath", exportPath);
+                            onComplete.accept(map);
                         }
                     }
                 } catch (Exception ex) {
@@ -276,7 +282,7 @@ public class ExportPDFListener implements ActionListener {
 
 
 
-    private void extracted(String cellValue, Font font, PdfPTable table) {
+    private void tmpExtracted(String cellValue, Font font, PdfPTable table) {
         PdfPCell cell = new PdfPCell();
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
@@ -284,21 +290,42 @@ public class ExportPDFListener implements ActionListener {
         table.addCell(cell);
     }
 
-    private void tmpExtracted(Headers findHeader, String cellValue, Font font, PdfPTable table) {
+    private void extracted(String value, String cellValue, Font font, PdfPTable table) {
         PdfPCell cell = new PdfPCell();
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        switch (findHeader) {
-            case TRANSACTION_TYPE:
-            case BUS_ROUTE:
-            case BOARDING_STATION:
-            case ALIGHTING_STATION:
-            case MERCHANT:
-            case TRANSACTION_DATETIME:
-            case AMOUNT:
+        switch (value) {
+            case "거래종류":
+            case "거래일시":
+
+            case "거래처":
+            case "버스노선":
+            case "차량번호":
+            case "승차역":
+            case "하차역":
                 cell.setPhrase(new Phrase(cellValue, font));
                 table.addCell(cell);
                 break;
+            case "사용금액":
+            case "거래후잔액":
+                try {
+                    // Locale.US 이라서 ',' 를 천단위로 읽고, '.'를 소수점으로 읽음
+                    // int로 변환하여 총합계를 구하고, format을 변경하여 노출
+                    String format1 = cellValue + "원";
+                    if (value.equals("사용금액")) {
+                        NumberFormat nf = NumberFormat.getInstance(Locale.US);
+                        int price = nf.parse(cellValue).intValue();
+                        priceSum += price;
+                        format1 = nf.format(price) + "원";
+                    }
+                    cell.setPhrase(new Phrase(format1, font));
+                    table.addCell(cell);
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
+
+                break;
+
         }
     }
 }
